@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hotel Management Console</title>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+            background: #0b1120;
+            color: #e5e7eb;
+        }
+        header {
+            padding: 1.5rem;
+            background: #0f172a;
+            border-bottom: 1px solid #1f2937;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            letter-spacing: 0.05rem;
+        }
+        header p {
+            margin: 0.5rem 0 0;
+            color: #94a3b8;
+        }
+        main {
+            padding: 1.5rem;
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        section {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        section h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #cbd5f5;
+        }
+        section h3 {
+            margin: 0.75rem 0 0.25rem;
+            font-size: 0.95rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08rem;
+            color: #94a3b8;
+        }
+        input, select {
+            background: #0f172a;
+            border: 1px solid #1f2937;
+            border-radius: 0.5rem;
+            padding: 0.6rem 0.75rem;
+            color: #e5e7eb;
+            font-size: 0.95rem;
+        }
+        input:focus, select:focus {
+            outline: 2px solid #2563eb;
+            outline-offset: 0;
+        }
+        button {
+            appearance: none;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.6rem 0.85rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: #f8fafc;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+        }
+        button.secondary {
+            background: transparent;
+            border: 1px solid #334155;
+            color: #cbd5f5;
+            box-shadow: none;
+        }
+        button.secondary:hover {
+            background: #1f2937;
+            box-shadow: none;
+        }
+        .token-status {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .token-status span {
+            color: #38bdf8;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+        }
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        #log-section {
+            grid-column: 1 / -1;
+        }
+        #log {
+            max-height: 420px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding-right: 0.5rem;
+        }
+        .log-entry {
+            background: #0f172a;
+            border-radius: 0.6rem;
+            border: 1px solid #1f2937;
+            padding: 0.85rem;
+        }
+        .log-entry.error {
+            border-color: #dc2626;
+            background: rgba(220, 38, 38, 0.1);
+        }
+        .log-entry .log-title {
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 0.4rem;
+        }
+        .log-entry pre {
+            margin: 0;
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .small-note {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        @media (max-width: 720px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Hotel Management Console</h1>
+    <p>Use this dashboard to authenticate, explore, and manage every REST endpoint without Postman.</p>
+</header>
+<main>
+    <section id="auth">
+        <h2>Authentication</h2>
+        <div class="token-status">Current token: <span id="token-indicator">not set</span></div>
+        <div class="actions">
+            <button type="button" class="secondary" id="logoutBtn">Clear token</button>
+        </div>
+        <h3>Register</h3>
+        <form id="registerForm">
+            <label for="register-username">Username</label>
+            <input id="register-username" name="username" required>
+            <label for="register-password">Password</label>
+            <input id="register-password" name="password" type="password" required>
+            <button type="submit">Create account</button>
+        </form>
+        <h3>Login</h3>
+        <form id="loginForm">
+            <label for="login-username">Username</label>
+            <input id="login-username" name="username" required>
+            <label for="login-password">Password</label>
+            <input id="login-password" name="password" type="password" required>
+            <button type="submit">Get token</button>
+        </form>
+    </section>
+
+    <section id="guests">
+        <h2>Guests</h2>
+        <form id="createGuestForm">
+            <h3>Add guest</h3>
+            <label for="guest-name">Name</label>
+            <input id="guest-name" name="name" required>
+            <label for="guest-phone">Phone</label>
+            <input id="guest-phone" name="phone" required>
+            <label for="guest-email">Email</label>
+            <input id="guest-email" name="email" type="email" required>
+            <button type="submit">Create guest</button>
+        </form>
+        <form id="updateGuestForm">
+            <h3>Update guest</h3>
+            <label for="guest-id-update">Guest ID</label>
+            <input id="guest-id-update" name="id" type="number" min="1" required>
+            <label for="guest-name-update">Name</label>
+            <input id="guest-name-update" name="name" required>
+            <label for="guest-phone-update">Phone</label>
+            <input id="guest-phone-update" name="phone" required>
+            <label for="guest-email-update">Email</label>
+            <input id="guest-email-update" name="email" type="email" required>
+            <button type="submit">Save changes</button>
+        </form>
+        <form id="deleteGuestForm">
+            <h3>Delete guest</h3>
+            <label for="guest-id-delete">Guest ID</label>
+            <input id="guest-id-delete" name="id" type="number" min="1" required>
+            <button type="submit">Delete guest</button>
+        </form>
+        <button type="button" id="listGuestsBtn" class="secondary">Load all guests</button>
+    </section>
+
+    <section id="rooms">
+        <h2>Rooms</h2>
+        <form id="createRoomForm">
+            <h3>Add room</h3>
+            <label for="room-number">Number</label>
+            <input id="room-number" name="number" required>
+            <label for="room-type">Type</label>
+            <input id="room-type" name="type" required>
+            <label for="room-capacity">Capacity</label>
+            <input id="room-capacity" name="capacity" type="number" min="1" required>
+            <label for="room-price">Price per night</label>
+            <input id="room-price" name="price" type="number" step="0.01" min="0" required>
+            <button type="submit">Create room</button>
+        </form>
+        <form id="updateRoomForm">
+            <h3>Update room</h3>
+            <label for="room-id-update">Room ID</label>
+            <input id="room-id-update" name="id" type="number" min="1" required>
+            <label for="room-number-update">Number</label>
+            <input id="room-number-update" name="number" required>
+            <label for="room-type-update">Type</label>
+            <input id="room-type-update" name="type" required>
+            <label for="room-capacity-update">Capacity</label>
+            <input id="room-capacity-update" name="capacity" type="number" min="1" required>
+            <label for="room-price-update">Price per night</label>
+            <input id="room-price-update" name="price" type="number" step="0.01" min="0" required>
+            <button type="submit">Save changes</button>
+        </form>
+        <form id="deleteRoomForm">
+            <h3>Delete room</h3>
+            <label for="room-id-delete">Room ID</label>
+            <input id="room-id-delete" name="id" type="number" min="1" required>
+            <button type="submit">Delete room</button>
+        </form>
+        <button type="button" id="listRoomsBtn" class="secondary">Load all rooms</button>
+        <form id="availableRoomsForm">
+            <h3>Check availability</h3>
+            <label for="available-check-in">Check-in</label>
+            <input id="available-check-in" name="checkIn" type="date" required>
+            <label for="available-check-out">Check-out</label>
+            <input id="available-check-out" name="checkOut" type="date" required>
+            <button type="submit">Search available rooms</button>
+        </form>
+        <div class="actions">
+            <button type="button" id="occupancyStatsBtn" class="secondary">Occupancy stats</button>
+            <button type="button" id="popularTypesBtn" class="secondary">Popular types</button>
+        </div>
+    </section>
+
+    <section id="bookings">
+        <h2>Bookings</h2>
+        <form id="createBookingForm">
+            <h3>Create booking</h3>
+            <label for="booking-guest">Guest ID</label>
+            <input id="booking-guest" name="guestId" type="number" min="1" required>
+            <label for="booking-room">Room ID</label>
+            <input id="booking-room" name="roomId" type="number" min="1" required>
+            <label for="booking-check-in">Check-in</label>
+            <input id="booking-check-in" name="checkIn" type="date" required>
+            <label for="booking-check-out">Check-out</label>
+            <input id="booking-check-out" name="checkOut" type="date" required>
+            <button type="submit">Create booking</button>
+        </form>
+        <form id="cancelBookingForm">
+            <h3>Cancel booking</h3>
+            <label for="booking-id-cancel">Booking ID</label>
+            <input id="booking-id-cancel" name="id" type="number" min="1" required>
+            <button type="submit">Cancel booking</button>
+        </form>
+        <form id="deleteBookingForm">
+            <h3>Delete booking</h3>
+            <label for="booking-id-delete">Booking ID</label>
+            <input id="booking-id-delete" name="id" type="number" min="1" required>
+            <button type="submit">Delete booking</button>
+        </form>
+        <form id="guestBookingsForm">
+            <h3>Guest bookings</h3>
+            <label for="bookings-guest-id">Guest ID</label>
+            <input id="bookings-guest-id" name="guestId" type="number" min="1" required>
+            <button type="submit">Load bookings</button>
+        </form>
+        <form id="guestHistoryForm">
+            <h3>Guest history</h3>
+            <label for="history-guest-id">Guest ID</label>
+            <input id="history-guest-id" name="guestId" type="number" min="1" required>
+            <button type="submit">Load history</button>
+        </form>
+        <button type="button" id="listBookingsBtn" class="secondary">Load all bookings</button>
+        <form id="bookingDurationForm">
+            <h3>Booking duration</h3>
+            <label for="duration-booking-id">Booking ID</label>
+            <input id="duration-booking-id" name="bookingId" type="number" min="1" required>
+            <button type="submit">Get duration</button>
+        </form>
+        <form id="bookingTotalCostForm">
+            <h3>Total cost</h3>
+            <label for="total-booking-id">Booking ID</label>
+            <input id="total-booking-id" name="bookingId" type="number" min="1" required>
+            <button type="submit">Calculate total</button>
+        </form>
+    </section>
+
+    <section id="payments">
+        <h2>Payments</h2>
+        <form id="createPaymentForm">
+            <h3>Add payment</h3>
+            <label for="payment-booking">Booking ID</label>
+            <input id="payment-booking" name="bookingId" type="number" min="1" required>
+            <label for="payment-amount">Amount</label>
+            <input id="payment-amount" name="amount" type="number" step="0.01" min="0" required>
+            <label for="payment-date">Payment date</label>
+            <input id="payment-date" name="paymentDate" type="date" required>
+            <button type="submit">Create payment</button>
+        </form>
+        <form id="bookingPaymentsForm">
+            <h3>Payments by booking</h3>
+            <label for="payments-booking-id">Booking ID</label>
+            <input id="payments-booking-id" name="bookingId" type="number" min="1" required>
+            <button type="submit">Load payments</button>
+        </form>
+        <button type="button" id="listPaymentsBtn" class="secondary">Load all payments</button>
+        <button type="button" id="totalPaymentsBtn" class="secondary">Total paid amount</button>
+    </section>
+
+    <section id="roomServices">
+        <h2>Room services</h2>
+        <form id="createRoomServiceForm">
+            <h3>Add service</h3>
+            <label for="service-room-id">Room ID</label>
+            <input id="service-room-id" name="roomId" type="number" min="1" required>
+            <label for="service-description">Description</label>
+            <input id="service-description" name="description" required>
+            <label for="service-price">Price</label>
+            <input id="service-price" name="price" type="number" step="0.01" min="0" required>
+            <button type="submit">Create service</button>
+        </form>
+        <form id="roomServicesForm">
+            <h3>Services by room</h3>
+            <label for="service-room-search">Room ID</label>
+            <input id="service-room-search" name="roomId" type="number" min="1" required>
+            <button type="submit">Load services</button>
+        </form>
+    </section>
+
+    <section id="log-section">
+        <h2>Activity log</h2>
+        <div class="actions">
+            <button type="button" id="clearLogBtn" class="secondary">Clear log</button>
+        </div>
+        <p class="small-note">All responses and errors from the API will show up here instantly.</p>
+        <div id="log"></div>
+    </section>
+</main>
+<script>
+    const tokenIndicator = document.getElementById('token-indicator');
+    const logContainer = document.getElementById('log');
+    let authToken = localStorage.getItem('hotelJwt') || '';
+
+    const normalize = (value) => value == null ? '' : String(value).trim();
+
+    const updateTokenDisplay = () => {
+        tokenIndicator.textContent = authToken ? `${authToken.substring(0, 24)}…` : 'not set';
+        tokenIndicator.style.color = authToken ? '#4ade80' : '#f87171';
+    };
+
+    const setToken = (token) => {
+        authToken = token || '';
+        if (authToken) {
+            localStorage.setItem('hotelJwt', authToken);
+        } else {
+            localStorage.removeItem('hotelJwt');
+        }
+        updateTokenDisplay();
+    };
+
+    updateTokenDisplay();
+
+    const logResult = (title, data, isError = false) => {
+        const entry = document.createElement('div');
+        entry.className = `log-entry${isError ? ' error' : ''}`;
+        const time = new Date().toLocaleTimeString();
+        const payload = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        entry.innerHTML = `<div class="log-title">${time} · ${title}</div><pre>${payload}</pre>`;
+        logContainer.prepend(entry);
+    };
+
+    const apiFetch = async (path, options = {}) => {
+        const headers = new Headers(options.headers || {});
+        if (options.body && !headers.has('Content-Type')) {
+            headers.set('Content-Type', 'application/json');
+        }
+        if (authToken) {
+            headers.set('Authorization', `Bearer ${authToken}`);
+        }
+        const response = await fetch(path, { ...options, headers });
+        if (response.status === 204) {
+            return { status: 'No Content' };
+        }
+        const contentType = response.headers.get('content-type') || '';
+        const payload = contentType.includes('application/json') ? await response.json() : await response.text();
+        if (!response.ok) {
+            throw new Error(typeof payload === 'string' && payload.trim() ? payload : JSON.stringify(payload));
+        }
+        return payload;
+    };
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        setToken('');
+        logResult('Token cleared', 'Local token storage reset.');
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+            username: normalize(form.elements['username'].value),
+            password: normalize(form.elements['password'].value)
+        };
+        try {
+            const data = await apiFetch('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            setToken(data.token);
+            logResult('Registration successful', data);
+            form.reset();
+        } catch (error) {
+            logResult('Registration failed', error.message, true);
+        }
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+            username: normalize(form.elements['username'].value),
+            password: normalize(form.elements['password'].value)
+        };
+        try {
+            const data = await apiFetch('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            setToken(data.token);
+            logResult('Login successful', data);
+            form.reset();
+        } catch (error) {
+            logResult('Login failed', error.message, true);
+        }
+    });
+
+    document.getElementById('createGuestForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+            name: normalize(form.elements['name'].value),
+            phone: normalize(form.elements['phone'].value),
+            email: normalize(form.elements['email'].value)
+        };
+        try {
+            const data = await apiFetch('/api/guests', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            logResult('Guest created', data);
+            form.reset();
+        } catch (error) {
+            logResult('Guest creation failed', error.message, true);
+        }
+    });
+
+    document.getElementById('updateGuestForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const id = form.elements['id'].value;
+        const payload = {
+            name: normalize(form.elements['name'].value),
+            phone: normalize(form.elements['phone'].value),
+            email: normalize(form.elements['email'].value)
+        };
+        try {
+            const data = await apiFetch(`/api/guests/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            logResult('Guest updated', data);
+        } catch (error) {
+            logResult('Guest update failed', error.message, true);
+        }
+    });
+
+    document.getElementById('deleteGuestForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = event.target.elements['id'].value;
+        try {
+            const data = await apiFetch(`/api/guests/${id}`, { method: 'DELETE' });
+            logResult('Guest deleted', data);
+            event.target.reset();
+        } catch (error) {
+            logResult('Guest deletion failed', error.message, true);
+        }
+    });
+
+    document.getElementById('listGuestsBtn').addEventListener('click', async () => {
+        try {
+            const data = await apiFetch('/api/guests');
+            logResult('All guests', data);
+        } catch (error) {
+            logResult('Fetch guests failed', error.message, true);
+        }
+    });
+
+    document.getElementById('createRoomForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+            number: normalize(form.elements['number'].value),
+            type: normalize(form.elements['type'].value),
+            capacity: Number(form.elements['capacity'].value),
+            pricePerNight: normalize(form.elements['price'].value)
+        };
+        try {
+            const data = await apiFetch('/api/rooms', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            logResult('Room created', data);
+            form.reset();
+        } catch (error) {
+            logResult('Room creation failed', error.message, true);
+        }
+    });
+
+    document.getElementById('updateRoomForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const id = form.elements['id'].value;
+        const payload = {
+            number: normalize(form.elements['number'].value),
+            type: normalize(form.elements['type'].value),
+            capacity: Number(form.elements['capacity'].value),
+            pricePerNight: normalize(form.elements['price'].value)
+        };
+        try {
+            const data = await apiFetch(`/api/rooms/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            logResult('Room updated', data);
+        } catch (error) {
+            logResult('Room update failed', error.message, true);
+        }
+    });
+
+    document.getElementById('deleteRoomForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = event.target.elements['id'].value;
+        try {
+            const data = await apiFetch(`/api/rooms/${id}`, { method: 'DELETE' });
+            logResult('Room deleted', data);
+            event.target.reset();
+        } catch (error) {
+            logResult('Room deletion failed', error.message, true);
+        }
+    });
+
+    document.getElementById('listRoomsBtn').addEventListener('click', async () => {
+        try {
+            const data = await apiFetch('/api/rooms');
+            logResult('All rooms', data);
+        } catch (error) {
+            logResult('Fetch rooms failed', error.message, true);
+        }
+    });
+
+    document.getElementById('availableRoomsForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const params = new URLSearchParams({
+            checkInDate: normalize(form.elements['checkIn'].value),
+            checkOutDate: normalize(form.elements['checkOut'].value)
+        });
+        try {
+            const data = await apiFetch(`/api/rooms/available?${params.toString()}`);
+            logResult('Available rooms', data);
+        } catch (error) {
+            logResult('Availability lookup failed', error.message, true);
+        }
+    });
+
+    document.getElementById('occupancyStatsBtn').addEventListener('click', async () => {
+        try {
+            const data = await apiFetch('/api/rooms/occupancy');
+            logResult('Occupancy stats', data);
+        } catch (error) {
+            logResult('Occupancy stats failed', error.message, true);
+        }
+    });
+
+    document.getElementById('popularTypesBtn').addEventListener('click', async () => {
+        try {
+            const data = await apiFetch('/api/rooms/popular-types');
+            logResult('Popular room types', data);
+        } catch (error) {
+            logResult('Popular types failed', error.message, true);
+        }
+    });
+
+    document.getElementById('createBookingForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+            guestId: Number(form.elements['guestId'].value),
+            roomId: Number(form.elements['roomId'].value),
+            checkInDate: normalize(form.elements['checkIn'].value),
+            checkOutDate: normalize(form.elements['checkOut'].value)
+        };
+        try {
+            const data = await apiFetch('/api/bookings', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            logResult('Booking created', data);
+            form.reset();
+        } catch (error) {
+            logResult('Booking creation failed', error.message, true);
+        }
+    });
+
+    document.getElementById('cancelBookingForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = event.target.elements['id'].value;
+        try {
+            const data = await apiFetch(`/api/bookings/${id}/cancel`, { method: 'POST' });
+            logResult('Booking cancelled', data);
+            event.target.reset();
+        } catch (error) {
+            logResult('Booking cancellation failed', error.message, true);
+        }
+    });
+
+    document.getElementById('deleteBookingForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = event.target.elements['id'].value;
+        try {
+            const data = await apiFetch(`/api/bookings/${id}`, { method: 'DELETE' });
+            logResult('Booking deleted', data);
+            event.target.reset();
+        } catch (error) {
+            logResult('Booking deletion failed', error.message, true);
+        }
+    });
+
+    document.getElementById('guestBookingsForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const guestId = event.target.elements['guestId'].value;
+        try {
+            const data = await apiFetch(`/api/bookings/guest/${guestId}`);
+            logResult('Guest bookings', data);
+        } catch (error) {
+            logResult('Guest bookings failed', error.message, true);
+        }
+    });
+
+    document.getElementById('guestHistoryForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const guestId = event.target.elements['guestId'].value;
+        try {
+            const data = await apiFetch(`/api/bookings/guest/${guestId}/history`);
+            logResult('Guest history', data);
+        } catch (error) {
+            logResult('Guest history failed', error.message, true);
+        }
+    });
+
+    document.getElementById('listBookingsBtn').addEventListener('click', async () => {
+        try {
+            const data = await apiFetch('/api/bookings');
+            logResult('All bookings', data);
+        } catch (error) {
+            logResult('Fetch bookings failed', error.message, true);
+        }
+    });
+
+    document.getElementById('bookingDurationForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const bookingId = event.target.elements['bookingId'].value;
+        try {
+            const data = await apiFetch(`/api/bookings/${bookingId}/duration`);
+            logResult('Booking duration', data);
+        } catch (error) {
+            logResult('Booking duration failed', error.message, true);
+        }
+    });
+
+    document.getElementById('bookingTotalCostForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const bookingId = event.target.elements['bookingId'].value;
+        try {
+            const data = await apiFetch(`/api/bookings/${bookingId}/total-cost`);
+            logResult('Booking total cost', data);
+        } catch (error) {
+            logResult('Booking total cost failed', error.message, true);
+        }
+    });
+
+    document.getElementById('createPaymentForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+            bookingId: Number(form.elements['bookingId'].value),
+            amount: normalize(form.elements['amount'].value),
+            paymentDate: normalize(form.elements['paymentDate'].value)
+        };
+        try {
+            const data = await apiFetch('/api/payments', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            logResult('Payment created', data);
+            form.reset();
+        } catch (error) {
+            logResult('Payment creation failed', error.message, true);
+        }
+    });
+
+    document.getElementById('bookingPaymentsForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const bookingId = event.target.elements['bookingId'].value;
+        try {
+            const data = await apiFetch(`/api/payments/booking/${bookingId}`);
+            logResult('Payments by booking', data);
+        } catch (error) {
+            logResult('Payments lookup failed', error.message, true);
+        }
+    });
+
+    document.getElementById('listPaymentsBtn').addEventListener('click', async () => {
+        try {
+            const data = await apiFetch('/api/payments');
+            logResult('All payments', data);
+        } catch (error) {
+            logResult('Fetch payments failed', error.message, true);
+        }
+    });
+
+    document.getElementById('totalPaymentsBtn').addEventListener('click', async () => {
+        try {
+            const data = await apiFetch('/api/payments/total');
+            logResult('Total payments', data);
+        } catch (error) {
+            logResult('Total payments failed', error.message, true);
+        }
+    });
+
+    document.getElementById('createRoomServiceForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+            roomId: Number(form.elements['roomId'].value),
+            description: normalize(form.elements['description'].value),
+            price: normalize(form.elements['price'].value)
+        };
+        try {
+            const data = await apiFetch('/api/room-services', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            logResult('Room service created', data);
+            form.reset();
+        } catch (error) {
+            logResult('Room service creation failed', error.message, true);
+        }
+    });
+
+    document.getElementById('roomServicesForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const roomId = event.target.elements['roomId'].value;
+        try {
+            const data = await apiFetch(`/api/room-services/room/${roomId}`);
+            logResult('Room services', data);
+        } catch (error) {
+            logResult('Room services failed', error.message, true);
+        }
+    });
+
+    document.getElementById('clearLogBtn').addEventListener('click', () => {
+        logContainer.innerHTML = '';
+    });
+</script>
+</body>
+</html>
